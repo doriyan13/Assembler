@@ -101,6 +101,8 @@ typedef struct BinaryLine{
 	Boolean isDone;
 	AddressType addressType;
 	DataType dataType;
+	CommandType cmdType;
+	int line;
 	struct BinaryLine *next;
 } BinaryLine;
 
@@ -139,10 +141,11 @@ void labelHandle(char *line, Label **labelList, Attributes currAttributes);
 int registerHandler(char * line, short signed int *regArr,short int amountOfRegisters,int i);
 int registerHandlerArrSpot(char *line, short signed int *regArr,int i,int spot);
 int immedHandler(char * line, int **immed , int i);
-void doStatementHandler(char * line,doStatement currDoState, BinaryLine **binLineList);
+void doStatementHandler(char * line,doStatement currDoState, BinaryLine **binLineList, Label **labelList);
 void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine);
 void printBinaryLineList(BinaryLine **binLineList);
 void freeBinaryList(BinaryLine **binLineList);
-long signed int RcmdHandler(char * line,Command * cmd);
-long signed int IcmdHandler(char * line,Command * cmd);
+void RcmdHandler(char * line,Command * cmd,BinaryLine **binLineList);
+void IcmdHandler(char * line,Command * cmd,BinaryLine **binLineList);
 void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **binLineList);
+void secondScan( Label **labelList, BinaryLine **binLineList);

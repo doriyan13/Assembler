@@ -68,3 +68,121 @@ void printBinary(signed long int * cmdBin, int start_spot, int end_spot){
 	}
 	printf("\n");
 }
+
+/*
+* This function get a long signed BinaryLine and transform it to little edian Hex and return it.
+*/
+char *binaryToHex(long signed int binaryVal,int size){
+	int multi = 1, currSpot = 0,index = 0,tempFirstDigit = 0,tempSecDigit = 0;
+	char *hexVal = NULL,tempChar[1];
+
+	Boolean isFirst = true, isSec = false;
+
+	hexVal = (char *)malloc((2 * size) * sizeof(char));
+
+	while(currSpot <= (size * 8)){
+		if(currSpot != 0 && currSpot % 4 == 0){
+			if(isFirst == true && isSec == false){
+				isFirst = false;
+				isSec = true;
+				multi = 1;
+			}
+			else if(isFirst != true && isSec == true){
+				switch(tempSecDigit){
+					case 0:
+					case 1:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+					case 8:
+					case 9:
+						sprintf(tempChar, "%d", tempSecDigit);
+						hexVal[index] = tempChar[0];
+						break;
+					case 10:
+						hexVal[index] = 'A';
+						break;
+					case 11:
+						hexVal[index] = 'B';
+						break;
+					case 12:
+						hexVal[index] = 'C';
+						break;
+					case 13:
+						hexVal[index] = 'D';
+						break;
+					case 14:
+						hexVal[index] = 'E';
+						break;
+					case 15:
+						hexVal[index] = 'F';
+						break;
+				}
+				printf("index: %d,letter: %d\n",index,tempSecDigit);
+				/*moving to the next figure*/
+				index++;
+
+				switch(tempFirstDigit){
+					case 0:
+					case 1:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+					case 8:
+					case 9:
+						sprintf(tempChar, "%d", tempFirstDigit);
+						hexVal[index] = tempChar[0];
+						break;
+					case 10:
+						hexVal[index] = 'A';
+						break;
+					case 11:
+						hexVal[index] = 'B';
+						break;
+					case 12:
+						hexVal[index] = 'C';
+						break;
+					case 13:
+						hexVal[index] = 'D';
+						break;
+					case 14:
+						hexVal[index] = 'E';
+						break;
+					case 15:
+						hexVal[index] = 'F';
+						break;
+				}
+				printf("index: %d,letter: %d\n",index,tempFirstDigit);
+				/*moving to the next figure*/
+				index++;		
+				
+				isFirst = true;
+				isSec = false;
+				tempFirstDigit = 0;
+				tempSecDigit = 0;
+				multi = 1;
+			}
+		}
+		if(isFirst == true && isSec == false){
+			if(TestBit(binaryVal,currSpot) > 0){
+				tempFirstDigit = tempFirstDigit + 1 * multi; 			
+			}
+		}
+		else if(isSec == true && isFirst == false){
+			if(TestBit(binaryVal,currSpot) > 0){
+				tempSecDigit = tempSecDigit + 1 * multi; 			
+			}
+		}
+		multi = multi * 2;
+		currSpot++;
+	}
+
+	printf("this is the hex: %s\n",hexVal);	
+	return hexVal;
+}

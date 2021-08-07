@@ -16,6 +16,8 @@ int main(int argc, char const *argv[])
 	/*char *fullFileName = NULL;*/	
 	FILE * file;
 
+	char *test = NULL;
+
 	/*cmdArr - will hold the array of commands: */
 	Command *cmdArr = NULL;
 	/*labelList - will hold the list of labels: */
@@ -37,6 +39,8 @@ int main(int argc, char const *argv[])
 	binLineList->secondScan = "empty"; /* to notify that this is the first node in the list! */
 	binLineList->next = NULL;
 
+	test = binaryToHex(6637632,4);
+	free(test);
 	if(argc <= 1)
 	{
 		printf("No File were typed.\n");
@@ -53,6 +57,8 @@ int main(int argc, char const *argv[])
 				lineNumber = 1;
 				firstScan(file,&cmdArr,&labelList,&binLineList);
 			   	fclose(file);
+
+				secondScan(&labelList,&binLineList);
 
 				/*TODO: DEBUG! */
 				printLabelList(&labelList);
