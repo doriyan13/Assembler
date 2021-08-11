@@ -132,6 +132,7 @@ CommandName iCmdType(char *val);
 CommandName jCmdType(char *val);
 doStatement doStatementType(char *val);
 void printLabelList(Label **labelList);
+Label *getLabelFromList(char *currString,Label **labelList);
 void freeLabelList(Label **labelList);
 void initCommandsList(Command ** arr);
 char getNextChar(FILE *file);

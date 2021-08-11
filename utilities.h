@@ -18,5 +18,5 @@ typedef enum LetterType
 }LetterType;
 
 LetterType letterType(char c);
-int skipBlankSpots(char ** str);
-char* concat(const char *s1, const char *s2);
+char *getFileName(const char *currFileName);
+char *concat(const char *s1, const char *s2);

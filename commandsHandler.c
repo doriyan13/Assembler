@@ -13,7 +13,7 @@ static int bufferIndex = -1;
 long int IC = 100, DC = 0; /*address of the memory*/
 
 /* Boolean flags to represent if there is a error - */
-Boolean lineError = false, isFileVaild = true;
+Boolean lineError = false, isFileVaild = true, isEntry = false, isExtern = false;
 
 /*
 * This function is getting a string and check if he is a type of command and return the type.
@@ -381,6 +381,67 @@ void setNextChar(char ch){
 }
 
 /*
+*
+*/
+void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine){
+	BinaryLine *temp = (*binLineList);
+	if((*currBinLine)->addressType == ICType){
+		if((*binLineList)->addressType == DCType){
+			(*currBinLine)->next = (*binLineList);
+			*binLineList = *currBinLine;
+			return;
+		}		
+
+		while(temp->next != NULL && temp->next->addressType == ICType){
+			temp = temp->next;
+		}
+		(*currBinLine)->next = temp->next;
+		temp->next = (*currBinLine);
+		return;
+	}
+	else{
+		while(temp->next != NULL){
+			temp = temp->next;
+		}
+	}
+	temp->next = (*currBinLine);
+	return;
+}
+
+/*
+*
+*/
+void printBinaryLineList(BinaryLine **binLineList){
+	BinaryLine *temp = (*binLineList);
+	
+	while(temp != NULL){
+		printf("address: %ld, addressType: %d, line: %d , dataType: %d, cmdType: %d, bin: %ld, secScan: %s, isDone: %d\n",temp->address,temp->addressType,temp->line,temp->dataType,temp->cmdType,temp->binary,temp->secondScan,temp->isDone);
+		printBinary(&temp->binary,0,31);
+		printf("\n");
+		temp = temp->next;
+	}
+}
+
+/*
+* free the memory of all the Labels in the list in the end of each file
+*/
+void freeBinaryList(BinaryLine **binLineList){
+	printf("current address: %ld\n",(*binLineList)->address);
+	if((*binLineList)->next != NULL){	
+
+		printf("next address: %ld\n\n",(*binLineList)->next->address);
+
+		freeBinaryList(&(*binLineList)->next);
+	}
+	if((*binLineList)->secondScan != NULL){
+		printf("free secondScan: %s\n",(*binLineList)->secondScan);
+		free((*binLineList)->secondScan);
+	}
+	free(*binLineList);
+	return;
+}
+
+/*
 * This function is getting a pointer to a file and return a char* that will hold the current line (command) that i have in the file.
 * **file - a pointer to the current file that i want to get his current line.
 * Return - char* that will hold the current line (command).
@@ -525,7 +586,6 @@ void labelHandle(char *line, Label **labelList, Attributes currAttributes){
 			else if(currAttributes == data){
 				if(labelListPointer->attributes[code] == 1){
 					lineError = true;
-					printf("labelListPointer name: %s\n",labelListPointer->name);
 					printf("Line: %d trying to define a data Label for a code Label definition\n",lineNumber);
 					if(currlabel != NULL){
 						free(currlabel);
@@ -1107,7 +1167,6 @@ char *getLabel(char * line, int i){
 	int startSpot = -1, endSpot = -1;
 	char *currString = NULL;	
 	Boolean isDone = false;
-
 	while(letterType(line[i]) != eof && letterType(line[i]) != newLine && isDone != true){
 		if((letterType(line[i]) == smallLetter || letterType(line[i]) == bigLetter) && startSpot == -1){
 			startSpot = i;
@@ -1341,7 +1400,7 @@ void doStatementHandler(char * line,doStatement currDoState, BinaryLine **binLin
 		if(isAsciz == true){
 			/*need to handle each char*/
 			currString = charsHandler(line,i);
-	
+
 			if(currString != NULL){
 				i = 0;
 
@@ -1394,61 +1453,6 @@ void doStatementHandler(char * line,doStatement currDoState, BinaryLine **binLin
 			printf("Line: %d Invaild args in a doStatement line\n",lineNumber);
 		}
 	}
-}
-
-/*
-*
-*/
-void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine){
-	BinaryLine *temp = (*binLineList);
-	if((*currBinLine)->addressType == ICType){
-		while(temp->next != NULL && temp->next->addressType == ICType){
-			temp = temp->next;
-		}
-		(*currBinLine)->next = temp->next;
-		temp->next = (*currBinLine);
-		return;
-	}
-	else{
-		while(temp->next != NULL){
-			temp = temp->next;
-		}
-	}
-	temp->next = (*currBinLine);
-	return;
-}
-
-/*
-*
-*/
-void printBinaryLineList(BinaryLine **binLineList){
-	BinaryLine *temp = (*binLineList);
-	
-	while(temp != NULL){
-		printf("address: %ld, addressType: %d, line: %d , dataType: %d, cmdType: %d, bin: %ld, secScan: %s, isDone: %d\n",temp->address,temp->addressType,temp->line,temp->dataType,temp->cmdType,temp->binary,temp->secondScan,temp->isDone);
-		printBinary(&temp->binary,0,31);
-		printf("\n");
-		temp = temp->next;
-	}
-}
-
-/*
-* free the memory of all the Labels in the list in the end of each file
-*/
-void freeBinaryList(BinaryLine **binLineList){
-	printf("current address: %ld\n",(*binLineList)->address);
-	if((*binLineList)->next != NULL){	
-
-		printf("next address: %ld\n\n",(*binLineList)->next->address);
-
-		freeBinaryList(&(*binLineList)->next);
-	}
-	if((*binLineList)->secondScan != NULL){
-		printf("free secondScan: %s\n",(*binLineList)->secondScan);
-		free((*binLineList)->secondScan);
-	}
-	free(*binLineList);
-	return;
 }
 
 /*
@@ -1713,7 +1717,7 @@ void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 		isLabel = true;
 
 		/*Can hold only a label*/
-		currLabel = getLabel(line,i);
+		currLabel = getLabel(line,i+1);
 		if(lineError == true){
 			if(currLabel != NULL){
 				free(currLabel);
@@ -1725,6 +1729,7 @@ void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 	else if(letterType(line[i]) != eof && currLabel == NULL){
 		while(letterType(line[i]) != eof){	
 			if(letterType(line[i]) != blankLetter){
+				putchar(line[i]);
 				lineError = true;
 				printf("Line: %d Too much args!\n",lineNumber);
 				if(currLabel != NULL){
@@ -1738,7 +1743,7 @@ void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 	/* Handle the binary Transformation of J cmd: */
 	numberToBinary(cmd->opCode,&retVal,26,31); /* opCode */	
 
-	if(isLabel != true){	
+	if(isLabel != true && cmd->cmdName != Stop){	
 		numberToBinary(1,&retVal,25,25); /* reg */
 		numberToBinary(regArr[0],&retVal,0,24); /* address */
 	}
@@ -1801,7 +1806,7 @@ void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **binLineList){
 	int i = 0,startSpot = -1,endSpot = -1, argsSpot = -1;
 	char *line = NULL,*firstWord = NULL,*secWord = NULL;
-	Boolean isFirstWord = true, isSecWord = false, isCommentLine = false,isEmptyLine = false, isArgs = false, foundCmd = false;
+	Boolean isFirstWord = true, isSecWord = false, isCommentLine = false,isEmptyLine = false, isArgs = false, foundCmd = false, isNoArgs = false;
 	CommandName cmdName = None;
 	doStatement currDoState = NotStatement;
 
@@ -1859,6 +1864,7 @@ void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **bi
 				strncpy(secWord,&(line[startSpot]),(endSpot - startSpot + 1));
 				secWord[endSpot - startSpot + 1] = '\0';
 				isSecWord = false;
+				isNoArgs = true;
 			}
 			if(firstWord != NULL){
 				if((cmdName = CmdType(firstWord)) != None){				
@@ -1887,41 +1893,55 @@ void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **bi
 					doStatementHandler(&line[argsSpot],currDoState,binLineList,labelList);
 					if(lineError != true){
 						foundCmd = true;
+						if(currDoState == Entry){
+							isEntry = true;
+						}
+						else if(currDoState == Extern){
+							isExtern = true;
+						}
 					}
 				}
 			}
 			/* If we enter here we need to handle our label: */
-			if(secWord != NULL){
+			if(secWord != NULL && foundCmd == false){
 				if((cmdName = CmdType(secWord)) != None){
 					if(rCmdType(secWord) != None){
+						labelHandle(firstWord,labelList,code);
 						RcmdHandler(&line[argsSpot],&(*arrCmd)[cmdName],binLineList);
 						if(lineError != true){
-							labelHandle(firstWord,labelList,code);
 							foundCmd = true;
 						}
 					}
 					else if(iCmdType(secWord) != None){
+						labelHandle(firstWord,labelList,code);
 						IcmdHandler(&line[argsSpot],&(*arrCmd)[cmdName],binLineList);
 						if(lineError != true){
-							labelHandle(firstWord,labelList,code);
 							foundCmd = true;
 						}
 					}
 					else if(jCmdType(secWord) != None){
+						if(isNoArgs == true){
+							argsSpot = strlen(line); 
+						}
+						labelHandle(firstWord,labelList,code);
 						JcmdHandler(&line[argsSpot],&(*arrCmd)[cmdName],binLineList);
 						if(lineError != true){
-							labelHandle(firstWord,labelList,code);
 							foundCmd = true;
 						}
 					}
 				}
 				else if((currDoState = doStatementType(secWord)) != NotStatement){
-					/*Make the BinLines in the function: */
+					labelHandle(firstWord,labelList,data);
 					doStatementHandler(&line[argsSpot],currDoState,binLineList,labelList);
 					/*if there is a entry or external doStatement the label isn't relavent - */
 					if(lineError != true && currDoState != Entry && currDoState != Extern){
-						labelHandle(firstWord,labelList,data);
 						foundCmd = true;
+						if(currDoState == Entry){
+							isEntry = true;
+						}
+						else if(currDoState == Extern){
+							isExtern = true;
+						}
 					}
 				}
 			}
@@ -1944,6 +1964,7 @@ void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **bi
 		isEmptyLine = false;
 		isArgs = false;
 		foundCmd = false;
+		isNoArgs = false;
 		startSpot = -1;
 		endSpot = -1;
 		free(line);
@@ -1971,7 +1992,7 @@ void secondScan( Label **labelList, BinaryLine **binLineList){
 
 	/*Handle BinaryLine labels and address*/	
 	while(tempLabelList != NULL){
-		if(tempLabelList->attributes[code] != 1 && tempLabelList->value != 0){
+		if(tempLabelList->attributes[data] == 1){
 			tempLabelList->value = tempLabelList->value + IC; 
 		}
 		tempLabelList = tempLabelList->next;
@@ -1988,9 +2009,9 @@ void secondScan( Label **labelList, BinaryLine **binLineList){
 				if(tempLabelList != NULL){
 					if(tempBinaryLine->cmdType == I){
 					
-						tempAddress = (tempBinaryLine->address) - (tempLabelList->value);
+						tempAddress = (tempLabelList->value) - (tempBinaryLine->address);
 						/*TODO debugging!*/
-						printf("binAdd: %ld,labelAdd: %ld,diff: %ld\n",(tempBinaryLine->address),(tempLabelList->value),tempAddress);
+						/*printf("binAdd: %ld,labelAdd: %ld,diff: %ld\n",(tempBinaryLine->address),(tempLabelList->value),tempAddress);*/
 						if(tempAddress >= 0){
 							numberToBinary(tempAddress,&(tempBinaryLine->binary),0,15); /* immed */						
 						}
@@ -2000,7 +2021,14 @@ void secondScan( Label **labelList, BinaryLine **binLineList){
 						}
 					}
 					else if(tempBinaryLine->cmdType == J){
-						numberToBinary((tempLabelList->value),&(tempBinaryLine->binary),0,24); /* address */
+						/*printf("binAdd: %ld,labelAdd: %ld,diff: %ld\n",(tempBinaryLine->address),(tempLabelList->value),tempAddress);*/
+						/*printf("label name: %s, binLine name: %s,address: %ld\n",tempLabelList->name,tempBinaryLine->secondScan,tempBinaryLine->address);*/						
+						if(tempLabelList->value == 0){
+							tempLabelList->value = tempBinaryLine->address;
+						}
+						if(tempLabelList->attributes[external] != 1){
+							numberToBinary((tempLabelList->value),&(tempBinaryLine->binary),0,24); /* address */
+						}
 					}
 				}
 				else {

@@ -78,7 +78,9 @@ char *binaryToHex(long signed int binaryVal,int size){
 
 	Boolean isFirst = true, isSec = false;
 
-	hexVal = (char *)malloc((2 * size) * sizeof(char));
+	hexVal = (char *)malloc((2 * size) * sizeof(char) + (size-1) * sizeof(char)); /*adding size - 1 to add the needed spaces*/
+
+	/*printf("binVal:|%ld|, size: |%d|, memory allocation: |%d|\n",binaryVal,size,sizeof(hexVal));*/
 
 	while(currSpot <= (size * 8)){
 		if(currSpot != 0 && currSpot % 4 == 0){
@@ -121,7 +123,8 @@ char *binaryToHex(long signed int binaryVal,int size){
 						hexVal[index] = 'F';
 						break;
 				}
-				printf("index: %d,letter: %d\n",index,tempSecDigit);
+				/*printf("index: %d,letter: %d\n",index,tempSecDigit);*/
+
 				/*moving to the next figure*/
 				index++;
 
@@ -158,9 +161,15 @@ char *binaryToHex(long signed int binaryVal,int size){
 						hexVal[index] = 'F';
 						break;
 				}
-				printf("index: %d,letter: %d\n",index,tempFirstDigit);
+				/*printf("index: %d,letter: %d\n",index,tempFirstDigit);*/
+
 				/*moving to the next figure*/
-				index++;		
+				index++;
+
+				if((currSpot + 1) < (size * 8)){
+					hexVal[index] = ' ';
+					index++;
+				}		
 				
 				isFirst = true;
 				isSec = false;
@@ -168,6 +177,7 @@ char *binaryToHex(long signed int binaryVal,int size){
 				tempSecDigit = 0;
 				multi = 1;
 			}
+			hexVal[index] = '\0';
 		}
 		if(isFirst == true && isSec == false){
 			if(TestBit(binaryVal,currSpot) > 0){
@@ -183,6 +193,6 @@ char *binaryToHex(long signed int binaryVal,int size){
 		currSpot++;
 	}
 
-	printf("this is the hex: %s\n",hexVal);	
+	/*printf("this is the hex: %s\n",hexVal);*/
 	return hexVal;
 }

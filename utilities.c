@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "utilities.h"
+#include "commandsHandler.h"
 
 /* This function get a char c and check if he is a letter.
 * if he is a number the function will retun 'number'
@@ -53,38 +54,49 @@ LetterType letterType(char c)
 }
 
 /*
-* This function is getting a char array and return the first non blank spot.
-* **str - array of chars that i want to scan.
-* Return - if i get to EOF, the function will return -1, if i get to '\n' return -2.
+* This function get a file name and check that he is a asembly file and return the name without the file type.
+* *currFileName - a file name.
+* Return - the name without the file type, return NULL if the file type isn't asembly.
 */
-int skipBlankSpots(char ** str){
-	int curr_spot = 0;
+char *getFileName(const char *currFileName){
+	char *retVal = NULL, checkFileType[2];
+	int i = 0,fileTypeIndex = 0,nameEndSpot = -1;
+	Boolean isDone = false;
 
-	while(letterType((*str)[curr_spot]) != eof || letterType((*str)[curr_spot]) != newLine || letterType((*str)[curr_spot]) != blankLetter ){
-		curr_spot++;
+	while(letterType(currFileName[i]) != eof){
+		if(letterType(currFileName[i]) == dot){
+			isDone = true;
+			nameEndSpot = i -1;
+		}
+		if(isDone == true && letterType(currFileName[i]) != dot){
+			if(fileTypeIndex < 2){
+				checkFileType[fileTypeIndex] = currFileName[i];
+				fileTypeIndex++;
+			}
+			else{
+				return NULL;
+			}
+		}
+		i++;
 	}
-
-	if(letterType((*str)[curr_spot]) == eof){
-		return -1;
+	if(strcmp(checkFileType,"as") == 0){
+		retVal = (char *)malloc((nameEndSpot + 2) * sizeof(char));
+		strncpy(retVal,&(currFileName[0]),(nameEndSpot + 1));
+		retVal[nameEndSpot + 1] = '\0';
+		return retVal;
 	}
-	else if(letterType((*str)[curr_spot]) == newLine){
-		return -2;
-	}
-
-	return curr_spot;
+	return NULL;
 }
 
-/**/
-char* concat(const char *s1, const char *s2){
-    char *result = malloc(strlen(s1)+strlen(s2)+1);
-    if(result)
-    {
+/*
+*
+*/
+char *concat(const char *s1, const char *s2){
+    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+    if(result){
         strcpy(result, s1);
         strcat(result, s2);
         return result;
     }
-    else
-    {
-        return NULL;
-    }
+    return NULL;
 }
