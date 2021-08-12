@@ -568,7 +568,9 @@ void labelHandle(char *line, Label **labelList, Attributes currAttributes){
 				labelListPointer = labelListPointer->next;	
 			}
 		}
-
+		if(isExist == false && strcmp(currlabel,labelListPointer->name) == 0){
+			isExist = true;
+		}
 		if(isExist == true){
 			if(currAttributes == code){
 				if(labelListPointer->attributes[data] == 1){
@@ -683,17 +685,29 @@ void labelHandle(char *line, Label **labelList, Attributes currAttributes){
 
 		if(currAttributes == code){
 			newLabel->attributes[code] = 1;
+			newLabel->attributes[data] = 0;
+			newLabel->attributes[entry] = 0;
+			newLabel->attributes[external] = 0;
 			newLabel->value = IC;
 		}
 		else if(currAttributes == data){
+			newLabel->attributes[code] = 0;
 			newLabel->attributes[data] = 1;
+			newLabel->attributes[entry] = 0;
+			newLabel->attributes[external] = 0;;
 			newLabel->value = DC;
 		}
 		else if(currAttributes == entry){
+			newLabel->attributes[code] = 0;
+			newLabel->attributes[data] = 0;
 			newLabel->attributes[entry] = 1;
+			newLabel->attributes[external] = 0;
 			newLabel->value = 0;
 		}
 		else if(currAttributes == external){
+			newLabel->attributes[code] = 0;
+			newLabel->attributes[data] = 0;
+			newLabel->attributes[entry] = 0;
 			newLabel->attributes[external] = 1;
 			newLabel->value = 0;
 		}
@@ -707,17 +721,29 @@ void labelHandle(char *line, Label **labelList, Attributes currAttributes){
 
 		if(currAttributes == code){
 			labelListPointer->attributes[code] = 1;
+			labelListPointer->attributes[data] = 0;
+			labelListPointer->attributes[entry] = 0;
+			labelListPointer->attributes[external] = 0;
 			labelListPointer->value = IC;
 		}
 		else if(currAttributes == data){
+			labelListPointer->attributes[code] = 0;
 			labelListPointer->attributes[data] = 1;
+			labelListPointer->attributes[entry] = 0;
+			labelListPointer->attributes[external] = 0;
 			labelListPointer->value = DC;
 		}
 		else if(currAttributes == entry){
+			labelListPointer->attributes[code] = 0;
+			labelListPointer->attributes[data] = 0;
 			labelListPointer->attributes[entry] = 1;
+			labelListPointer->attributes[external] = 0;
 			labelListPointer->value = 0;
 		}
 		else if(currAttributes == external){
+			labelListPointer->attributes[code] = 0;
+			labelListPointer->attributes[data] = 0;
+			labelListPointer->attributes[entry] = 0;
 			labelListPointer->attributes[external] = 1;
 			labelListPointer->value = 0;
 		}
@@ -1955,10 +1981,13 @@ void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **bi
 					}
 				}
 				else if((currDoState = doStatementType(secWord)) != NotStatement){
-					labelHandle(firstWord,labelList,data);
+					if(currDoState != Entry && currDoState != Extern){				
+						labelHandle(firstWord,labelList,data);
+					}
+
 					doStatementHandler(&line[argsSpot],currDoState,binLineList,labelList);
 					/*if there is a entry or external doStatement the label isn't relavent - */
-					if(lineError != true && currDoState != Entry && currDoState != Extern){
+					if(lineError != true){
 						foundCmd = true;
 						if(currDoState == Entry){
 							isEntry = true;
@@ -2012,7 +2041,7 @@ void secondScan( Label **labelList, BinaryLine **binLineList){
 	long signed int tempAddress = 0;
 
 	BinaryLine *tempBinaryLine = (*binLineList);	
-	Label *tempLabelList = *labelList;
+	Label *tempLabelList = (*labelList);
 
 	/*Handle BinaryLine labels and address*/	
 	while(tempLabelList != NULL){
