@@ -8,7 +8,9 @@
 
 /*The number of line in the file i'm in, for each file i reset the size of line*/
 int lineNumber = 1;
+/* Validation for errors in file and if there is a entry or a external doStatement- */
 extern Boolean isFileVaild, isEntry, isExtern;
+/* The addresses types counter- */
 extern long int IC, DC;
 
 int main(int argc, char const *argv[])
@@ -32,19 +34,6 @@ int main(int argc, char const *argv[])
 	cmdArr =  malloc(sizeof(Command) * 27); 
 	initCommandsList(&cmdArr); /* fill the array with all the relavent commands*/
 
-	/* Giving dynamic memory allocation for labelList: */
-	labelList = (Label *)malloc(sizeof(Label));
-	labelList->name = "empty";
-	labelList->next = NULL;
-
-	/* Giving dynamic memory allocation for BinaryLine: */
-	binLineList = (BinaryLine *)malloc(sizeof(BinaryLine));
-	binLineList->secondScan = "empty"; /* to notify that this is the first node in the list! */
-	binLineList->next = NULL;
-
-	/*tempHexData = binaryToHex(97,1);
-	free(tempHexData);*/
-
 	if(argc <= 1){
 		printf("No File were typed.\n");
 		exit(0);
@@ -56,21 +45,37 @@ int main(int argc, char const *argv[])
 			if(tempFileName != NULL){
 
 				file = fopen(argv[i], "r");
-				if (file){	
+				if (file){
+					/* Reset the memory spots for each file- */	
 					lineNumber = 1;
+					IC = 100;
+					DC = 0;
+					currLineAddress = 100;
+					/* Giving dynamic memory allocation for labelList: */
+					labelList = (Label *)malloc(sizeof(Label));
+					labelList->name = "empty";
+					labelList->next = NULL;
+
+					/* Giving dynamic memory allocation for BinaryLine: */
+					binLineList = (BinaryLine *)malloc(sizeof(BinaryLine));
+					binLineList->secondScan = "empty"; /* to notify that this is the first node in the list! */
+					binLineList->next = NULL;
+
 					firstScan(file,&cmdArr,&labelList,&binLineList);
-				   	fclose(file);
 
 					secondScan(&labelList,&binLineList);
 
 					if(isFileVaild == true){
 						/* If the file hold only vaild syntex then the assembler will create the .ob and .entry and .extern files*/
+						/* Handle the entry & external files: */
 						if(isEntry == true || isExtern == true){
 							if(isEntry == true){
 								entFileName = concat(tempFileName,".ent\0");
 								if(entFileName == NULL || (fent = fopen(entFileName,"w")) == NULL){
 									printf("Error: could not create output files to: %s\n",tempFileName);
-									free(cmdArr);
+									if(cmdArr != NULL){
+										free(cmdArr);
+									}
 									exit(0);
 								}
 							}
@@ -78,7 +83,9 @@ int main(int argc, char const *argv[])
 								extFileName = concat(tempFileName,".ext\0");
 								if(extFileName == NULL || (fext = fopen(extFileName,"w")) == NULL){
 									printf("Error: could not create output files to: %s\n",tempFileName);
-									free(cmdArr);
+									if(cmdArr != NULL){
+										free(cmdArr);
+									}
 									exit(0);
 								}
 							}
@@ -99,7 +106,7 @@ int main(int argc, char const *argv[])
 								}
 							}
 						}
-
+						/* Handle the obj file: */
 						objFileName = concat(tempFileName,".ob\0");
 						if(objFileName != NULL && (fobj = fopen(objFileName,"w")) != NULL){
 							fprintf(fobj,"      %ld %ld",(IC-100),(DC));
@@ -137,18 +144,13 @@ int main(int argc, char const *argv[])
 									else if(tempBinLine->dataType == OneByte){
 										tempHexData = binaryToHex(tempBinLine->binary,1);
 									}
-									else {
-										/*TODO:Error!*/
-									}
-									/*printf("handle: |%s|\n",tempHexData);*/
 									while(letterType(tempHexData[hexIndex]) != eof){
 										if(letterType(tempHexData[hexIndex]) == blankLetter){
 											lineSizeCounter++;
 											fprintf(fobj," ");
-										}				
-										/*printf(" lineSize: %d\n",lineSizeCounter);*/						
+										}									
 										if(lineSizeCounter == 4){
-											/**/
+											/* Handle the display of address in the obj file*/
 											if(currLineAddress != 0 && currLineAddress < 1000){
 												fprintf(fobj,"\n0%ld  ",currLineAddress);
 											}
@@ -167,34 +169,51 @@ int main(int argc, char const *argv[])
 									if(lineSizeCounter < 4 && tempBinLine->next != NULL){
 										fprintf(fobj,"  ");
 									}
-									free(tempHexData);
-									tempHexData = NULL;
+									if(tempHexData != NULL){
+										free(tempHexData);
+										tempHexData = NULL;
+									}
 									hexIndex = 0;
 									tempBinLine = tempBinLine->next;
 								}
 							}
-							fclose(fobj);							
-							fclose(fent);
-							fclose(fext);
+							if(fobj != NULL){
+								fclose(fobj);	
+							}
+							if(fent != NULL){						
+								fclose(fent);
+							}
+							if(fext != NULL){
+								fclose(fext);
+							}
 						}
 						else{
 							printf("Error: could not create output files to: %s\n",tempFileName);
-							free(cmdArr);
+							if(cmdArr != NULL){
+								free(cmdArr);
+							}
 							exit(0);
 						}
-
-						
 					}
 
-					/*TODO: DEBUG! */
-					printLabelList(&labelList);
+					#if DEBUG
+						printLabelList(&labelList);
+					#endif
 					/* Free all the labels of the current file - (can be done after creating entry and extern file if needed)*/
-					freeLabelList(&labelList);
+					if(labelList != NULL){
+						freeLabelList(&labelList);
+						labelList = NULL;
+					}
 
-					/*TODO: DEBUG*/
-					printBinaryLineList(&binLineList);
+					#if DEBUG
+						printBinaryLineList(&binLineList);
+					#endif
 					/* Free all the Binary lines of the current file - (can be done after creating entry and extern file and the hex file if needed)*/
-					freeBinaryList(&binLineList);
+					if(binLineList != NULL){
+						freeBinaryList(&binLineList);
+						binLineList = NULL;
+					}
+					fclose(file);
 				}
 				else{
 					printf("Error: The file %s.as dose not exists.\n", argv[i] );
@@ -203,21 +222,33 @@ int main(int argc, char const *argv[])
 				}
 
 				isFileVaild = true;	/* Before going to the next file restart the check*/	
+				if(tempFileName != NULL){
 				free(tempFileName);
-				free(objFileName);
-				free(entFileName);
-				free(extFileName);
-				tempFileName = NULL;
+					tempFileName = NULL;
+				}
+				if(objFileName != NULL){
+					free(objFileName);
+					objFileName = NULL;
+				}
+				if(entFileName != NULL){
+					free(entFileName);
+					entFileName = NULL;
+				}
+				if(extFileName != NULL){
+					free(extFileName);
+					extFileName = NULL;
+				}
 				isEntry = false;
 				isExtern = false;
+				lineSizeCounter = 0;
+				hexIndex = 0;
 			}
 		}
 		else{
-			/*printf("Dynamic allocation error: couldn't create file: %s\n", argv[i]);*/
+			printf("Input error: couldn't open: %s\n", argv[i]);
 		}
 	}
 	/*Free the memory i gave arr*/
 	free(cmdArr);
-
 	return 0;
 }

@@ -54,7 +54,7 @@ void printBinary(signed long int * cmdBin, int start_spot, int end_spot){
 	short int space_counter = 0;
 
 	while(end_spot >= start_spot){
-		if(space_counter == 6 || space_counter == 11 || space_counter == 16 || space_counter == 21 || space_counter == 26){ /*currently works for R command, need to custom it for all the three types, maybe make one for each!*/
+		if(space_counter == 6 || space_counter == 11 || space_counter == 16 || space_counter == 21 || space_counter == 26){ 
 			putchar(' ');
 		}
 		if(TestBit((*cmdBin),end_spot) > 0){
@@ -71,6 +71,9 @@ void printBinary(signed long int * cmdBin, int start_spot, int end_spot){
 
 /*
 * This function get a long signed BinaryLine and transform it to little edian Hex and return it.
+* binaryVal - a binary line value.
+* size - the amout of byte that this binary line suppose to have.
+* Return - the display of hex little edian of the binary value.
 */
 char *binaryToHex(long signed int binaryVal,int size){
 	int multi = 1, currSpot = 0,index = 0,tempFirstDigit = 0,tempSecDigit = 0;
@@ -79,8 +82,6 @@ char *binaryToHex(long signed int binaryVal,int size){
 	Boolean isFirst = true, isSec = false;
 
 	hexVal = (char *)malloc((2 * size) * sizeof(char) + (size-1) * sizeof(char)); /*adding size - 1 to add the needed spaces*/
-
-	/*printf("binVal:|%ld|, size: |%d|, memory allocation: |%d|\n",binaryVal,size,sizeof(hexVal));*/
 
 	while(currSpot <= (size * 8)){
 		if(currSpot != 0 && currSpot % 4 == 0){
@@ -123,8 +124,6 @@ char *binaryToHex(long signed int binaryVal,int size){
 						hexVal[index] = 'F';
 						break;
 				}
-				/*printf("index: %d,letter: %d\n",index,tempSecDigit);*/
-
 				/*moving to the next figure*/
 				index++;
 
@@ -161,8 +160,6 @@ char *binaryToHex(long signed int binaryVal,int size){
 						hexVal[index] = 'F';
 						break;
 				}
-				/*printf("index: %d,letter: %d\n",index,tempFirstDigit);*/
-
 				/*moving to the next figure*/
 				index++;
 
@@ -192,7 +189,5 @@ char *binaryToHex(long signed int binaryVal,int size){
 		multi = multi * 2;
 		currSpot++;
 	}
-
-	/*printf("this is the hex: %s\n",hexVal);*/
 	return hexVal;
 }

@@ -1,3 +1,4 @@
+/* Define of const and functions -*/
 typedef enum LetterType
 {
 	number,

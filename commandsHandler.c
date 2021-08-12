@@ -207,7 +207,7 @@ CommandName jCmdType(char *val)
 }
 
 /*
-* This function is getting a string and check if he is a type of do statement and return the type.
+* This function is getting a string and check if he is a type of do-statement and return the type.
 * *val - array of chars that suppose to be a doStatement.
 * Return - the type of doStatement,if it doesn't it will return NotStatement.
 */
@@ -268,6 +268,7 @@ Attributes attributesType(char *val)
 
 /*
 * This function get a label list and print it.
+* **labelList - the label list that will be printed.
 */
 void printLabelList(Label **labelList){
 
@@ -299,7 +300,8 @@ Label *getLabelFromList(char *currString,Label **labelList){
 }
 
 /*
-* free the memory of all the Labels in the list in the end of each file
+* free the memory of all the Labels in the list in the end of each file.
+* **labelList - the list of all the current Labels.
 */
 void freeLabelList(Label **labelList){
 	#if DEBUG
@@ -364,7 +366,10 @@ void initCommandsList(Command ** arr){
 	}
 }
 
-/**/
+/* This function get a file pointer and return the next char.
+* *file - pointer to the current file.
+* Return the next char in the file, if there is any in the buffer then it will return first from the buffer.
+*/
 char getNextChar(FILE *file){
 
 	if(bufferIndex > -1)
@@ -374,14 +379,19 @@ char getNextChar(FILE *file){
 	return getc(file);
 }
 
-/**/
+/* This function get a char and add it to the buffer.
+* ch - current char that needed to be add to the buffer.
+*/
 void setNextChar(char ch){
 
 	buffer[++bufferIndex] = ch;
 }
 
 /*
-*
+* This function get the current binary line and add it to the binary list.
+* **binLineList - the current binary list.
+* **currBinLine - the current binary line that need to be added.
+* if the line is code line it will be saved before the data lines.
 */
 void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine){
 	BinaryLine *temp = (*binLineList);
@@ -391,7 +401,6 @@ void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine){
 			*binLineList = *currBinLine;
 			return;
 		}		
-
 		while(temp->next != NULL && temp->next->addressType == ICType){
 			temp = temp->next;
 		}
@@ -409,7 +418,8 @@ void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine){
 }
 
 /*
-*
+* This function get a binary line list and print it.
+* **binLineList - the binary line list that will be printed.
 */
 void printBinaryLineList(BinaryLine **binLineList){
 	BinaryLine *temp = (*binLineList);
@@ -423,18 +433,23 @@ void printBinaryLineList(BinaryLine **binLineList){
 }
 
 /*
-* free the memory of all the Labels in the list in the end of each file
+* Free the memory of all the binary lines and labels of the second scan in the list in the end of each file.
+* **binLineList - the binary line list that will be printed.
 */
 void freeBinaryList(BinaryLine **binLineList){
+	#if DEBUG
 	printf("current address: %ld\n",(*binLineList)->address);
+	#endif
 	if((*binLineList)->next != NULL){	
-
+		#if DEBUG
 		printf("next address: %ld\n\n",(*binLineList)->next->address);
-
+		#endif
 		freeBinaryList(&(*binLineList)->next);
 	}
 	if((*binLineList)->secondScan != NULL){
+		#if DEBUG
 		printf("free secondScan: %s\n",(*binLineList)->secondScan);
+		#endif
 		free((*binLineList)->secondScan);
 	}
 	free(*binLineList);
@@ -543,7 +558,7 @@ void labelHandle(char *line, Label **labelList, Attributes currAttributes){
 
 	labelListPointer = (*labelList);
 
-	/* after we know this label is vaild we check if this label exist or this is a new one: */
+	/* After we know this label is vaild we check if this label exist or this is a new one: */
 	if(strcmp(labelListPointer->name,"empty") != 0){
 		while(isExist == false && labelListPointer->next != NULL){
 			if(strcmp(currlabel,labelListPointer->name) == 0){
@@ -739,12 +754,13 @@ int registerHandler(char * line, short signed int *regArr,short int amountOfRegi
 			isStep = true;
 			isRegSign = false;
 
-			currRegister = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
-			strncpy(currRegister,&(line[startSpot]),(endSpot - startSpot + 1));
-			currRegister[endSpot - startSpot + 1] = '\0';
+			if(startSpot != -1 && endSpot != -1){
+				currRegister = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
+				strncpy(currRegister,&(line[startSpot]),(endSpot - startSpot + 1));
+				currRegister[endSpot - startSpot + 1] = '\0';
 
-			tempReg = atoi(currRegister);
-
+				tempReg = atoi(currRegister);
+			}
 			if(tempReg >= 0 && tempReg <= 31){
 				regArr[amountOfRegisters] = tempReg;
 				amountOfRegisters--;
@@ -834,11 +850,13 @@ int registerHandlerArrSpot(char *line, short signed int *regArr,int i,int spot){
 			isStep = true;
 			isRegSign = false;
 
-			currRegister = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
-			strncpy(currRegister,&(line[startSpot]),(endSpot - startSpot + 1));
-			currRegister[endSpot - startSpot + 1] = '\0';
+			if(startSpot != -1 && endSpot != -1){
+				currRegister = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
+				strncpy(currRegister,&(line[startSpot]),(endSpot - startSpot + 1));
+				currRegister[endSpot - startSpot + 1] = '\0';
 
-			tempReg = atoi(currRegister);
+				tempReg = atoi(currRegister);
+			}
 
 			if(tempReg >= 0 && tempReg <= 31){
 				regArr[spot] = tempReg;
@@ -927,12 +945,14 @@ int immedHandler(char * line, int **immed , int i){
 			endSpot = i;
 		}
 		else if(letterType(line[i]) == step){
-			currImmed = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
-			strncpy(currImmed,&(line[startSpot]),(endSpot - startSpot + 1));
-			currImmed[endSpot - startSpot + 1] = '\0';
 
-			tempImmed = (long int)atoi(currImmed);		
+			if(startSpot != -1 && endSpot != -1){	
+				currImmed = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
+				strncpy(currImmed,&(line[startSpot]),(endSpot - startSpot + 1));
+				currImmed[endSpot - startSpot + 1] = '\0';
 
+				tempImmed = (long int)atoi(currImmed);		
+			}
 			if(tempImmed > INT_MIN && tempImmed < INT_MAX){
 				if(isNegSign == true){
 					**immed = (int)-(tempImmed);
@@ -1040,12 +1060,14 @@ int numHandlerBySize(char * line, long signed int **currNum,int size , int i){
 			endSpot = i;
 		}
 		else if(letterType(line[i]) == step){
-			num = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
-			strncpy(num,&(line[startSpot]),(endSpot - startSpot + 1));
-			num[endSpot - startSpot + 1] = '\0';
 
-			tempNum = (long int)atoi(num);
+			if(startSpot != -1 && endSpot != -1){
+				num = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
+				strncpy(num,&(line[startSpot]),(endSpot - startSpot + 1));
+				num[endSpot - startSpot + 1] = '\0';
 
+				tempNum = (long int)atoi(num);
+			}
 			if(tempNum > minSize && tempNum < maxSize){
 				if(isNegSign == true){
 					**currNum = (long signed)-(tempNum);
@@ -1128,9 +1150,11 @@ char *charsHandler(char * line, int i){
 			isQuoteSignEnd = true;
 
 			if(currString == NULL){
-				currString = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
-				strncpy(currString,&(line[startSpot]),(endSpot - startSpot + 1));
-				currString[endSpot - startSpot + 1] = '\0';
+				if(startSpot != -1 && endSpot != -1){
+					currString = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
+					strncpy(currString,&(line[startSpot]),(endSpot - startSpot + 1));
+					currString[endSpot - startSpot + 1] = '\0';
+				}
 			}
 		}
 		else if(isprint(line[i]) > 0 && isQuoteSignStart == true && startSpot == -1){
@@ -1177,9 +1201,11 @@ char *getLabel(char * line, int i){
 		}
 		else if(letterType(line[i]) == blankLetter){
 			if(currString == NULL){
-				currString = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
-				strncpy(currString,&(line[startSpot]),(endSpot - startSpot + 1));
-				currString[endSpot - startSpot + 1] = '\0';
+				if(startSpot != -1 && endSpot != -1){
+					currString = (char *)malloc((endSpot - startSpot + 2) * sizeof(char));
+					strncpy(currString,&(line[startSpot]),(endSpot - startSpot + 1));
+					currString[endSpot - startSpot + 1] = '\0';
+				}
 			}
 			isDone = true;
 		}
@@ -1217,7 +1243,7 @@ char *getLabel(char * line, int i){
 }
 
 /*
-* This function is getting a line that suppose to hold a doStatement, the function check the doStatement is correct and add it to the BinaryLine list!.
+* This function is getting a line that suppose to hold a doStatement, the function check the doStatement is correct and add it to the BinaryLine list.
 * *line - A line that suppose to hold a doStatement.
 * currDoState - the Type of do statement.
 * **binLineList - list of all the binary lines. (going to add to them the doStatement lines accordingly)
@@ -1398,7 +1424,6 @@ void doStatementHandler(char * line,doStatement currDoState, BinaryLine **binLin
 			}
 		}
 		if(isAsciz == true){
-			/*need to handle each char*/
 			currString = charsHandler(line,i);
 
 			if(currString != NULL){
@@ -1494,22 +1519,16 @@ void RcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 	numberToBinary(cmd->opCode,&retVal,26,31); /* opCode */	
 	if(regArr[2] != (short signed int)-1){
 		numberToBinary(regArr[2],&retVal,21,25); /* rs */
-		/*printf("val of regArr[2]: %d\n",regArr[2]);*/
 		numberToBinary(regArr[1],&retVal,16,20); /* rt */
-		/*printf("val of regArr[1]: %d\n",regArr[1]);*/
 		numberToBinary(regArr[0],&retVal,11,15); /* rd */
-		/*printf("val of regArr[0]: %d\n",regArr[0]);*/
 	}
 	else {
 		numberToBinary(regArr[1],&retVal,21,25); /* rs */
-		/*printf("val of regArr[1]: %d\n",regArr[1]);*/
-		numberToBinary(0,&retVal,16,20); /* rt */
-		/*printf("val of regArr[2]: %d\n",regArr[2]);*/
+		numberToBinary(0,&retVal,16,20);         /* rt */
 		numberToBinary(regArr[0],&retVal,11,15); /* rd */
-		/*printf("val of regArr[0]: %d\n",regArr[0]);*/
 	}
 	numberToBinary(cmd->funct,&retVal,6,10); /* funct */
-	numberToBinary(0,&retVal,0,5); /* Not used bits */
+	numberToBinary(0,&retVal,0,5); /* Not used Bits */
 
 	if((*binLineList)->secondScan != NULL && strcmp((*binLineList)->secondScan,"empty") == 0){
 		(*binLineList)->address = IC;
@@ -1538,8 +1557,9 @@ void RcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 		/*Adding the New BinaryLine to the list: */
 		connectNewBinaryLine(binLineList,&currBinLine);
 	}
-	/*TODO DEBUG print r cmd to check - */
-	printBinary(&retVal,0,31);
+	#if DEBUG
+		printBinary(&retVal,0,31);
+	#endif
 
 	return;
 }
@@ -1608,10 +1628,8 @@ void IcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 	}
 	/* Handle the binary Transformation of I cmd: */
 	numberToBinary(cmd->opCode,&retVal,26,31); /* opCode */	
-	numberToBinary(regArr[0],&retVal,21,25); /* rs */
-	/*printf("val of regArr[0]: %d\n",regArr[2]);*/
-	numberToBinary(regArr[1],&retVal,16,20); /* rt */
-	/*printf("val of regArr[1]: %d\n",regArr[1]);*/
+	numberToBinary(regArr[0],&retVal,21,25);   /* rs */
+	numberToBinary(regArr[1],&retVal,16,20);   /* rt */
 
 	if(isNeededImmed == true){
 		if(immed >= 0){
@@ -1621,7 +1639,6 @@ void IcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 			/*This mean that i have a negative immed: */
 			immed = (-1)*immed;
 			negNumberToBinary(immed,&retVal,0,15); /* immed */
-			/*printf("val of immed: %d\n",immed);*/
 		}
 	}
 	/* If i have a label then it will be the seconed scan so we will storge the label and add a flag- */
@@ -1664,16 +1681,17 @@ void IcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 		/*Adding the New BinaryLine to the list: */
 		connectNewBinaryLine(binLineList,&currBinLine);
 	}
-	printBinary(&retVal,0,31);
-
+	#if DEBUG
+		printBinary(&retVal,0,31);
+	#endif
 	return;
 }
 
 /*
 * This function is getting a line that suppose to hold a J command, the function check the cmd is correct and if he is vaild then add it to the binary line list.
-* *line - A line that suppose to hold a I command.
+* *line - A line that suppose to hold a J command.
 * *cmd - pointer to the Jcmd data.
-* **currBinLine - list of all the binary lines. (going to add to them the Icmd lines accordingly)
+* **currBinLine - list of all the binary lines. (going to add to them the Jcmd lines accordingly)
 */
 void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 	int i = 0;
@@ -1725,11 +1743,10 @@ void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 			return;
 		}
 	}
-	/*a Stop cmd must have no agrs!*/
+	/* A Stop cmd must have no agrs!*/
 	else if(letterType(line[i]) != eof && currLabel == NULL){
 		while(letterType(line[i]) != eof){	
 			if(letterType(line[i]) != blankLetter){
-				putchar(line[i]);
 				lineError = true;
 				printf("Line: %d Too much args!\n",lineNumber);
 				if(currLabel != NULL){
@@ -1790,11 +1807,11 @@ void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList){
 		/*Adding the New BinaryLine to the list: */
 		connectNewBinaryLine(binLineList,&currBinLine);
 	}
-	printBinary(&retVal,0,31);
-
+	#if DEBUG
+		printBinary(&retVal,0,31);
+	#endif
 	return;
 }
-
 
 /*
 * This function will get a file pointer and the array of posible commands and will execute the first scan of the assembler.
@@ -1812,6 +1829,14 @@ void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **bi
 
 	while((line = getLine(file))){
 		i = 0;
+
+		/* If i have an unvaild line: */
+		if(line[i] == '~'){
+			printf("%s\n",line);
+			lineError = true;
+			isFileVaild = false;
+			return;
+		}
 		while(letterType(line[i]) != eof && isCommentLine != true && isArgs != true){
 			if(letterType(line[i]) == blankLetter){
 				if(startSpot != -1){
@@ -1844,7 +1869,6 @@ void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **bi
 			else if(letterType(line[i]) != blankLetter && (isFirstWord == true || isSecWord == true) && startSpot == -1){
 				startSpot = i;
 			}
-			/*printf("%c",line[i]);*/
 			endSpot = i;
 			i++;
 		}
@@ -1981,7 +2005,7 @@ void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **bi
 * This function will get the binary line list and the label list that was created in the first scan and update the I and J commands, also the second scan will update all the DC adress 
 * *file - pointer to the file needed to be transformed.
 * **labelList - list of all the current labels in the file.
-* **binLineList - list of all the binary lines in the file that i create.
+* **binLineList - list of all the binary lines in the file.
 */
 void secondScan( Label **labelList, BinaryLine **binLineList){
 
@@ -2010,8 +2034,7 @@ void secondScan( Label **labelList, BinaryLine **binLineList){
 					if(tempBinaryLine->cmdType == I){
 					
 						tempAddress = (tempLabelList->value) - (tempBinaryLine->address);
-						/*TODO debugging!*/
-						/*printf("binAdd: %ld,labelAdd: %ld,diff: %ld\n",(tempBinaryLine->address),(tempLabelList->value),tempAddress);*/
+
 						if(tempAddress >= 0){
 							numberToBinary(tempAddress,&(tempBinaryLine->binary),0,15); /* immed */						
 						}
@@ -2020,9 +2043,7 @@ void secondScan( Label **labelList, BinaryLine **binLineList){
 							negNumberToBinary(tempAddress,&(tempBinaryLine->binary),0,15); /* immed */
 						}
 					}
-					else if(tempBinaryLine->cmdType == J){
-						/*printf("binAdd: %ld,labelAdd: %ld,diff: %ld\n",(tempBinaryLine->address),(tempLabelList->value),tempAddress);*/
-						/*printf("label name: %s, binLine name: %s,address: %ld\n",tempLabelList->name,tempBinaryLine->secondScan,tempBinaryLine->address);*/						
+					else if(tempBinaryLine->cmdType == J){					
 						if(tempLabelList->value == 0){
 							tempLabelList->value = tempBinaryLine->address;
 						}

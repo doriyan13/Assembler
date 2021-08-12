@@ -1,5 +1,4 @@
 /*Define of enum and structs -*/
-
 typedef enum Boolean
 {
 	false,
@@ -106,19 +105,6 @@ typedef struct BinaryLine{
 	struct BinaryLine *next;
 } BinaryLine;
 
-/*This Struct will hold the list of data you can get from doStatement - */
-union Data {
-	char oneByte;
-	int twoByte:16;
-	int fourByte;
-};
-
-typedef struct dataNode{
-	long signed int address;
-	int nodeSize;
-	union Data data;
-} dataNode;
-
 /* Define of const and functions -*/
 
 #define lineSize 81
@@ -137,16 +123,20 @@ void freeLabelList(Label **labelList);
 void initCommandsList(Command ** arr);
 char getNextChar(FILE *file);
 void setNextChar(char ch);
+void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine);
+void printBinaryLineList(BinaryLine **binLineList);
+void freeBinaryList(BinaryLine **binLineList);
 char *getLine(FILE *file);
 void labelHandle(char *line, Label **labelList, Attributes currAttributes);
 int registerHandler(char * line, short signed int *regArr,short int amountOfRegisters,int i);
 int registerHandlerArrSpot(char *line, short signed int *regArr,int i,int spot);
 int immedHandler(char * line, int **immed , int i);
+int numHandlerBySize(char * line, long signed int **currNum,int size , int i);
+char *charsHandler(char * line, int i);
+char *getLabel(char * line, int i);
 void doStatementHandler(char * line,doStatement currDoState, BinaryLine **binLineList, Label **labelList);
-void connectNewBinaryLine(BinaryLine **binLineList,BinaryLine **currBinLine);
-void printBinaryLineList(BinaryLine **binLineList);
-void freeBinaryList(BinaryLine **binLineList);
 void RcmdHandler(char * line,Command * cmd,BinaryLine **binLineList);
 void IcmdHandler(char * line,Command * cmd,BinaryLine **binLineList);
+void JcmdHandler(char * line,Command * cmd,BinaryLine **binLineList);
 void firstScan(FILE *file, Command ** arrCmd, Label **labelList, BinaryLine **binLineList);
 void secondScan( Label **labelList, BinaryLine **binLineList);

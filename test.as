@@ -1,6 +1,7 @@
 MAIN: add $3,$5 , $9
 add $3,$5 , $9
 .entry K
+add $5,,$2
 ; MAIN: add $3,$5 , $9
 ;MAIN: add $3,$5 , $9
 ;		LOOP: ori	$9,-5,$2

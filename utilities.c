@@ -89,7 +89,10 @@ char *getFileName(const char *currFileName){
 }
 
 /*
-*
+* This function gets 2 const strings and return the concatenate of them.
+* s1 - the first String that suppose to be the start of the concate.
+* s2 - the second String that suppose to be the end of the concate.
+* Return - The concatenate of them, if there is a error the function will return NULL.
 */
 char *concat(const char *s1, const char *s2){
     char *result = malloc(strlen(s1) + strlen(s2) + 1);
